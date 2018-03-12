@@ -1,0 +1,40 @@
+#!/bin/bash
+transfer() {
+  if [ $# -eq 0 ]; then echo -e "No arguments specified."; return 1;fi
+  # 可选参数 -l 需要从transfer.sh下载的文件名
+  # 可选参数 -o 输出文件
+  # 可选参数 -t 限制文件有效时间
+  # 可选参数 -d 限制下载次数 （实测 transfer.sh 没有下载限制）
+  # headers=" "
+  while getopts "l:o:t:d:" opt
+  do
+    case $opt in
+      l) file_name=$OPTARG;;
+      o) out_file=$OPTARG;;
+      # d) headers+="-H Max-Downloads "${OPTARG};;
+      # t) headers+="-H Max-Days: "${OPTARG};;
+    esac  
+  done
+  if [ ! -z $file_name ]; then echo "Downloading $file_name:";
+  # 下载文件
+  curl --progress-bar "https://transfer.sh/$file_name" -o "$out_file"; echo "Finished!"; return 1;
+  fi
+
+  # 让$*保留除去选项内容的参数
+  shift $(($OPTIND - 1));
+  # 在系统临时目录下创建临时文件
+  tmpfile=$(mktemp -t transferXXX);
+  for f in $*  # 处理多个上传文件
+  do
+  # 如果文件名由标准输入设备输入，则格式化文件名： ./tmp/text@#$.png --> text---.png
+  if tty -s; then basefile=$(basename "$f" | sed -e 's/[^a-zA-Z0-9._-]/-/g');
+  # 返回结果存入临时文件中
+  echo "Uploading $basefile:"; curl --progress-bar --upload-file "$f" "https://transfer.sh/$basefile" > $tmpfile;
+  else 
+  echo "Uploading $f:";curl --progress-bar --upload-file "-" "https://transfer.sh/$f" > $tmpfile; fi;
+  # 将内容输入到标准输出
+  cat $tmpfile; echo "\n";
+  done
+  # 删除临时文件
+  rm -f $tmpfile;
+}
