@@ -4,7 +4,7 @@ transfer() {
   # 可选参数 -l 需要从transfer.sh下载的文件名
   # 可选参数 -o 输出文件
   # 可选参数 -t 限制文件有效时间
-  # 可选参数 -d 限制下载次数 （实测 transfer.sh 没有下载限制）
+  # 可选参数 -d 限制下载次数 (实测 transfer.sh 没有下载限制)
   # headers=" "
   while getopts "l:o:t:d:" opt
   do
